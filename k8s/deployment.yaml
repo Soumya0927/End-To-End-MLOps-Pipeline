@@ -1,23 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fraud-detector-deployment
-  labels:
-    app: fraud-detector
+  name: fraud-detection-api
+  namespace: oppe2-app
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: fraud-detector
+      app: fraud-detection-api
   template:
     metadata:
       labels:
-        app: fraud-detector
+        app: fraud-detection-api
     spec:
       serviceAccountName: telemetry-access
       containers:
-        - name: fraud-detector
-          image: IMAGE_PLACEHOLDER
+        - name: fraud-detection-api
+          image: us-central1-docker.pkg.dev/ultra-guard-461512-j0/docker-repo/fraud_app:latest
           ports:
             - containerPort: 8200
           resources:
