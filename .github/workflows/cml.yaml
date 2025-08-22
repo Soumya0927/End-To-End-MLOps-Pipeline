@@ -1,0 +1,47 @@
+name: Sanity Tests and CML Report
+
+on:
+  pull_request:
+    branches: [develop,main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  test-sanity-and-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Set up CML
+        uses: iterative/setup-cml@v2
+      
+      - name: Install packages and dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run sanity tests
+        run: |
+          pytest -s test_model_sanity.py | tee result.txt
+
+      - name: Add training report
+        run: |
+          echo "## Training Report" >> report.md
+          cat training_report.md >> report.md || echo "⚠️ No training_report.md found." >> report.md
+
+      - name: CML PR comment
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## Model Sanity Test Results" > report.md
+          cat result.txt >> report.md
+          cml comment create report.md
+
