@@ -1,12 +1,12 @@
 
-        ## Training Report
+        ## Training Report (Decision Tree)
         
-        Accuracy: 0.9996
-        F1 Score: 0.8911
-        Precision: 0.9574
-        Recall: 0.8333
-        AUC: 0.9336
+        Accuracy: 0.9991
+        F1 Score: 0.7547
+        Precision: 0.7692
+        Recall: 0.7407
+        AUC: 0.8702
         Confusion Matrix:
-        [[28425     2]
- [    9    45]]
+        [[28415    12]
+ [   14    40]]
         

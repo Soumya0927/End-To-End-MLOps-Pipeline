@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import mlflow
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -22,8 +22,8 @@ def main(train_path, val_path, mlflow_uri):
     X_train, y_train = train_df[features], train_df[target]
     X_val, y_val = val_df[features], val_df[target]
     
-    with mlflow.start_run(run_name="rf_baseline_v1") as run:
-        clf = RandomForestClassifier(n_estimators=100, random_state=42)
+    with mlflow.start_run(run_name="dt_baseline_v1") as run:
+        clf = DecisionTreeClassifier(random_state=42)
         clf.fit(X_train, y_train)
         
         # Predictions
@@ -59,7 +59,7 @@ def main(train_path, val_path, mlflow_uri):
         
         # Training report
         report = f"""
-        ## Training Report
+        ## Training Report (Decision Tree)
         
         Accuracy: {accuracy:.4f}
         F1 Score: {f1:.4f}
@@ -74,17 +74,16 @@ def main(train_path, val_path, mlflow_uri):
             f.write(report)
         mlflow.log_artifact(report_path, artifact_path="reports")
         
-        # Save model
-        mlflow.sklearn.log_model(clf, "rf_model")
+        # Save model with joblib
+        local_model_path = "dt_model.joblib"
+        joblib.dump(clf, local_model_path)
+        print(f"Model saved locally as {local_model_path}")
         
+        # Log model to MLflow
+        mlflow.sklearn.log_model(clf, "dt_model")
+
         print("Run completed. Run ID:", run.info.run_id)
         print("Training report generated:", report_path)
-        local_model_path = "rf_model.pkl"         # Pickle format
-        joblib.dump(clf, local_model_path) 
-        print(f"Model saved locally as {local_model_path}")
-
-        # The model is also logged to MLflow:
-        mlflow.sklearn.log_model(clf, "rf_model")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -94,3 +93,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     main(args.train, args.val, args.mlflow_uri)
+

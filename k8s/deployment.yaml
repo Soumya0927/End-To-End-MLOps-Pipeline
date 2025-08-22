@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-detection-api
+  namespace: oppe2-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fraud-detection-api
+  template:
+    metadata:
+      labels:
+        app: fraud-detection-api
+    spec:
+      serviceAccountName: telemetry-access
+      containers:
+        - name: fraud-detection-api
+          image: gcr.io/just-skyline-461512-a8/my-ml-api:latest
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          env:
+            - name: MODEL_PATH
+              value: "dt_model.joblib"
+
