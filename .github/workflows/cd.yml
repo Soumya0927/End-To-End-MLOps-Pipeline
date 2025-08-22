@@ -1,0 +1,88 @@
+name: Continuous Deployment to GKE - Fraud Detector
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GKE_CLUSTER: fraud-detection-cluster
+  GKE_ZONE: us-central1-a
+  ARTIFACT_REGISTRY: docker-repo
+  IMAGE_NAME: fraud-detector
+  DEPLOYMENT_NAME: fraud-detector-deployment
+  SERVICE_NAME: fraud-detector-service
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy Fraud Detection API
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'write'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_SECRET }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install GKE Auth Plugin
+        run: gcloud components install gke-gcloud-auth-plugin
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Build and Push Docker Image
+        id: build-image
+        run: |
+          IMAGE_TAG="us-central1-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REGISTRY}/${IMAGE_NAME}:${{ github.sha }}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          docker build -t $IMAGE_TAG ./app
+          docker push $IMAGE_TAG
+
+      - name: Deploy to GKE
+        run: |
+          gcloud container clusters get-credentials $GKE_CLUSTER --zone $GKE_ZONE
+          sed -i "s|IMAGE_PLACEHOLDER|$IMAGE_TAG|g" k8s/deployment.yaml
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+
+      - name: Wait for External IP
+        id: get-ip
+        run: |
+          echo "Waiting for external IP for service/$SERVICE_NAME..."
+          for i in {1..30}; do
+            EXTERNAL_IP=$(kubectl get service $SERVICE_NAME -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            if [ -n "$EXTERNAL_IP" ]; then
+              echo "EXTERNAL_IP=$EXTERNAL_IP" >> $GITHUB_ENV
+              echo "API_URL=http://$EXTERNAL_IP" >> $GITHUB_ENV
+              echo "External IP found: $EXTERNAL_IP"
+              break
+            fi
+            echo "Attempt $i of 30: still waiting..."
+            sleep 10
+          done
+          if [ -z "$EXTERNAL_IP" ]; then
+            echo "::error::External IP not found after 5 minutes."
+            exit 1
+          fi
+
+      - uses: iterative/setup-cml@v1
+
+      - name: Generate CML Report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pip install requests
+          python .cml/cd-pipeline-fraud.py
+          cml comment create report.md
+

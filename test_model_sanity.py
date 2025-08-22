@@ -5,8 +5,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 class TestModelMetrics(unittest.TestCase):
     def test_model_metrics_on_sample_data(self):
-        # Load model
-        model = joblib.load("rf_model.pkl")
+        # Load Decision Tree model
+        model = joblib.load("dt_model.joblib")
 
         # Load the sample data
         df = pd.read_csv("data/samples.csv")
