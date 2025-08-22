@@ -1,0 +1,33 @@
+stages:
+  download_data:
+    cmd: python scripts/download_data.py
+    params:
+      - data.gdrive_url
+    deps:
+      - scripts/download_data.py
+    outs:
+      - data/raw/transactions.csv
+
+  split_data:
+    cmd: python scripts/data_splitter.py
+    params:
+      - data.timestamp_col
+      - data_split.split_ratio
+    deps:
+      - data/raw/transactions.csv
+      - scripts/data_splitter.py
+    outs:
+      - data/processed/version_1.csv
+      - data/processed/version_2.csv
+      - data/processed/full_data.csv
+
+  poison_data:
+    cmd: python scripts/data_poisoner.py
+    params:
+      - poisoning.levels
+      - project.random_seed
+    deps:
+      - data/processed/version_1.csv
+      - scripts/data_poisoner.py
+    outs:
+      - data/processed/poisoned/

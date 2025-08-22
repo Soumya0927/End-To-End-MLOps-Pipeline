@@ -1,0 +1,41 @@
+# params.yaml
+data:
+  # The user will provide this link at runtime
+  # Example from Kaggle's Credit Card Fraud Detection dataset
+  gdrive_url: 'https://drive.google.com/file/d/1qAfvEMuhCeuvXcm6l5lJTPefkA2PYtC-/view?usp=sharing
+'
+  raw_csv: 'data/raw/transactions.csv'
+  version_1: 'data/processed/version_1.csv'
+  version_2: 'data/processed/version_2.csv'
+  full_data: 'data/processed/full_data.csv'
+  poisoned_datasets_dir: 'data/processed/poisoned/'
+  target_col: 'Class'
+  timestamp_col: 'Time'
+  poison_source: 'data/processed/version_1.csv'
+data_split:
+  # Split point is 50% of the timeline
+  split_ratio: 0.5
+
+poisoning:
+  levels: [0.02, 0.08, 0.15, 0.30]
+
+fairness:
+  sensitive_attribute: 'location'
+
+training:
+  model_name: 'xgboost'
+  params:
+    objective: 'binary:logistic'
+    eval_metric: 'auc'
+    n_estimators: 100
+    max_depth: 3
+    learning_rate: 0.1
+    seed: 42
+
+project:
+  # These will be replaced by environment variables in CI/CD
+  gcp_project_id: 'your-gcp-project-id'
+  gcp_region: 'us-central1'
+  dvc_remote: 'gcs'
+  mlflow_tracking_uri: 'http://34.122.180.209:8000' # Update after creating MLflow VM
+  random_seed: 42
