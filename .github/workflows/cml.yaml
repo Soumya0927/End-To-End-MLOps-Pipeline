@@ -1,0 +1,33 @@
+name: Sanity Tests and CML Report
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  test-sanity-and-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install CML and dependencies
+        run: |
+          pip install cml pytest scikit-learn pandas
+
+      - name: Run sanity tests
+        run: |
+          pytest src/tests/test_model_sanity.py --maxfail=1 --disable-warnings | tee result.txt
+
+      - name: CML PR comment
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## Model Sanity Test Results" > report.md
+          cat result.txt >> report.md
+          cml comment create report.md
