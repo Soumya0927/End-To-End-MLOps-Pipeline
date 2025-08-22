@@ -11,9 +11,10 @@ env:
   GKE_CLUSTER: fraud-detection-cluster
   GKE_ZONE: us-central1-a
   ARTIFACT_REGISTRY: docker-repo
-  IMAGE_NAME: fraud-detector
-  DEPLOYMENT_NAME: fraud-detector-deployment
+  IMAGE_NAME: fraud_app
+  DEPLOYMENT_NAME: fraud-detection-api
   SERVICE_NAME: fraud-detector-service
+  NAMESPACE: oppe2-app
 
 jobs:
   build-and-deploy:
@@ -44,24 +45,22 @@ jobs:
       - name: Build and Push Docker Image
         id: build-image
         run: |
-          IMAGE_TAG="us-central1-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REGISTRY}/${IMAGE_NAME}:${{ github.sha }}"
+          IMAGE_TAG="us-central1-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REGISTRY}/${IMAGE_NAME}:latest"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
           docker build -t $IMAGE_TAG .
           docker push $IMAGE_TAG
 
       - name: Deploy to GKE
         run: |
-          gcloud container clusters get-credentials $GKE_CLUSTER --zone $GKE_ZONE
-          sed -i "s|IMAGE_PLACEHOLDER|$IMAGE_TAG|g" k8s/deployment.yaml
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
+          gcloud container clusters get-credentials $GKE_CLUSTER --zone $GKE_ZONE --project $PROJECT_ID
+          kubectl apply -f k8s/
 
       - name: Wait for External IP
         id: get-ip
         run: |
           echo "Waiting for external IP for service/$SERVICE_NAME..."
           for i in {1..30}; do
-            EXTERNAL_IP=$(kubectl get service $SERVICE_NAME -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            EXTERNAL_IP=$(kubectl get service $SERVICE_NAME -n $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
             if [ -n "$EXTERNAL_IP" ]; then
               echo "EXTERNAL_IP=$EXTERNAL_IP" >> $GITHUB_ENV
               echo "API_URL=http://$EXTERNAL_IP" >> $GITHUB_ENV
@@ -80,7 +79,7 @@ jobs:
 
       - name: Generate CML Report
         env:
-          REPO_TOKEN: ${{ secrets.GH_PAT }}
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pip install requests
           python .cml/cd-pipeline-fraud.py
