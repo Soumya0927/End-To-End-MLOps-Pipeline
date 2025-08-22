@@ -3,7 +3,7 @@ name: Continuous Deployment to GKE - Fraud Detector
 on:
   push:
     branches:
-      - main
+      - [develop,main]
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
