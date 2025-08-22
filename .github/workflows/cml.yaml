@@ -30,7 +30,12 @@ jobs:
 
       - name: Run sanity tests
         run: |
-          unittest test_model_sanity.py --maxfail=1 --disable-warnings | tee result.txt
+          pytest -s test_model_sanity.py | tee result.txt
+
+      - name: Add training report
+        run: |
+          echo "## Training Report" >> report.md
+          cat training_report.md >> report.md || echo "⚠️ No training_report.md found." >> report.md
 
       - name: CML PR comment
         env:
@@ -39,3 +44,4 @@ jobs:
           echo "## Model Sanity Test Results" > report.md
           cat result.txt >> report.md
           cml comment create report.md
+
