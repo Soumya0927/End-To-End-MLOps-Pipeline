@@ -80,7 +80,7 @@ jobs:
 
       - name: Generate CML Report
         env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           pip install requests
           python .cml/cd-pipeline-fraud.py
