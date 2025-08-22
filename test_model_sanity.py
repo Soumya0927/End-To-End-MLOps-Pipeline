@@ -1,27 +1,30 @@
-import os
+import unittest
 import pandas as pd
-import pickle
+import joblib
 from sklearn.metrics import roc_auc_score
 
+class TestModelAUC(unittest.TestCase):
+    def test_model_auc_on_sample_data(self):
+        # Load model
+        model = joblib.load("rf_model.pkl")
 
-# Define the data folder path relative to project root
-def test_model_auc():
-    # Load a small test set and trained model (mock or actual)
+        # Load the sample data
+        df = pd.read_csv("data/samples.csv")
 
-# Get project root folder from the file location
-  
+        # Features and true labels (same as in train.py)
+        X = df.drop(columns=["Class"])
+        y_true = df["Class"]
 
-# Define the data folder path relative to project root
-# DATA_DIR = PROJECT_ROOT / "data"
-    
-    sample_path = "data/samples.csv"
-    
-    X = pd.read_csv(sample_path)
-    y = pd.Series([0, 1, 0, 1])
+        # Predict probabilities
+        y_proba = model.predict_proba(X)[:, 1]
 
-    with open("rf_model.pkl", "rb") as f:
-        model = pickle.load(f)
-    y_proba = model.predict_proba(X)[:, 1]
-    auc = roc_auc_score(y, y_proba)
-    assert auc > 0.5, f"Sanity check failed: AUC={auc:.2f}, expected >0.5"
-    print(f"AUC Score (sanity): {auc:.4f}")
+        # Calculate AUC
+        auc = roc_auc_score(y_true, y_proba)
+        print(f"AUC Score (sanity): {auc:.4f}")
+
+        # Assert AUC sanity check
+        self.assertGreater(auc, 0.5, f"Sanity check failed: AUC={auc:.2f}, expected > 0.5")
+
+if __name__ == "__main__":
+    unittest.main()
+
