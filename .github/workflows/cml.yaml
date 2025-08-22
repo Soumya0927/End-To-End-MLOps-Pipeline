@@ -30,7 +30,7 @@ jobs:
 
       - name: Run sanity tests
         run: |
-          pytest src/tests/test_model_sanity.py --maxfail=1 --disable-warnings | tee result.txt
+          pytest test_model_sanity.py --maxfail=1 --disable-warnings | tee result.txt
 
       - name: CML PR comment
         env:
