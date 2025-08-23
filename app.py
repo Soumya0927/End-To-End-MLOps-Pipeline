@@ -33,7 +33,7 @@ def get_model_path():
     if env_path and Path(env_path).exists():
         return env_path
 
-    return "dt_model.pkl"
+    return "dt_model.joblib"
 
 @app.on_event("startup")
 async def load_model():
