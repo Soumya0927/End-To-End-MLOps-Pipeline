@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: fraud-detection-api
   namespace: oppe2-app
+  labels:
+    app: fraud-detection-api
 spec:
   replicas: 2
   selector:
@@ -30,3 +32,15 @@ spec:
             - name: MODEL_PATH
               value: "dt_model.joblib"
 
+          livenessProbe:
+            httpGet:
+              path: /isLive
+              port: 8200
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /isReady
+              port: 8200
+            initialDelaySeconds: 20
+            periodSeconds: 10

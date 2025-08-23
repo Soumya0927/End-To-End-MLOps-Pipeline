@@ -1,0 +1,6 @@
+outs:
+- md5: b5af06c1a39683956dc6b1b13aa45cfe.dir
+  size: 301333792
+  nfiles: 4
+  hash: md5
+  path: poisoned
