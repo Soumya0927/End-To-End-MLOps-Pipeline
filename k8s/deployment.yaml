@@ -16,7 +16,7 @@ spec:
       serviceAccountName: telemetry-access
       containers:
         - name: fraud-detection-api
-          image: us-central1-docker.pkg.dev/ultra-guard-461512-j0/docker-repo/fraud_app:latest
+          image: us-central1-docker.pkg.dev/ultra-guard-461512-j0/ml-artifacts/fraud-detection-api:latest
           ports:
             - containerPort: 8200
           resources:
